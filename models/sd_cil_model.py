@@ -4,7 +4,6 @@ Stable Diffusion-based Class Incremental Learning Model
 
 import torch
 import torch.nn as nn
-from diffusers import StableDiffusionPipeline
 from typing import List, Tuple
 
 

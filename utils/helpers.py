@@ -51,7 +51,7 @@ def save_checkpoint(model, optimizer, epoch, task_id, config, filename=None):
     
     Args:
         model: Model to save
-        optimizer: Optimizer state
+        optimizer: Optimizer state (optional)
         epoch: Current epoch
         task_id: Current task ID
         config: Configuration object
@@ -66,28 +66,32 @@ def save_checkpoint(model, optimizer, epoch, task_id, config, filename=None):
         'epoch': epoch,
         'task_id': task_id,
         'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
     }
+    
+    if optimizer is not None:
+        checkpoint['optimizer_state_dict'] = optimizer.state_dict()
     
     torch.save(checkpoint, filepath)
     print(f"Checkpoint saved: {filepath}")
 
 
-def load_checkpoint(model, optimizer, filepath):
+def load_checkpoint(model, optimizer, filepath, device='cpu'):
     """
     Load model checkpoint
     
     Args:
         model: Model to load weights into
-        optimizer: Optimizer to load state into
+        optimizer: Optimizer to load state into (optional)
         filepath: Path to checkpoint file
+        device: Device to map checkpoint to
     
     Returns:
         epoch, task_id: Loaded epoch and task ID
     """
-    checkpoint = torch.load(filepath)
+    checkpoint = torch.load(filepath, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    if optimizer is not None and 'optimizer_state_dict' in checkpoint:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
     task_id = checkpoint['task_id']
     

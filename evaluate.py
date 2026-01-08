@@ -79,7 +79,7 @@ def main():
     # Load trained model
     checkpoint_path = f"{config.CHECKPOINT_DIR}/final_model.pth"
     try:
-        epoch, task_id = load_checkpoint(model, None, checkpoint_path)
+        epoch, task_id = load_checkpoint(model, None, checkpoint_path, device=str(device))
         print(f"Loaded model from epoch {epoch}, task {task_id}\n")
     except FileNotFoundError:
         print(f"Checkpoint not found at {checkpoint_path}")
