@@ -122,13 +122,13 @@ class TaskDataLoader:
         
         return data, labels
     
-    def get_memory_data(self, memory_images: List, memory_labels: List) -> DataLoader:
+    def get_memory_data(self, memory_images: torch.Tensor, memory_labels: torch.Tensor) -> DataLoader:
         """
         Create dataloader for memory/exemplar samples
         
         Args:
-            memory_images: List of stored exemplar images
-            memory_labels: List of corresponding labels
+            memory_images: Tensor of stored exemplar images
+            memory_labels: Tensor of corresponding labels
         
         Returns:
             memory_loader: DataLoader for memory samples
