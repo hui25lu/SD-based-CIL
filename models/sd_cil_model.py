@@ -41,9 +41,9 @@ class SDCILModel(nn.Module):
         # Classifier head (will be expanded for each task)
         self.classifier = nn.Linear(128, config.NUM_CLASSES_PER_TASK)
         
-        # Memory for exemplars
-        self.memory_images = []
-        self.memory_labels = []
+        # Memory for exemplars (stored as tensors for efficiency)
+        self.memory_images = torch.tensor([])
+        self.memory_labels = torch.tensor([])
     
     def forward(self, x):
         """
@@ -76,12 +76,12 @@ class SDCILModel(nn.Module):
         # Create new classifier
         new_classifier = nn.Linear(in_features, out_features)
         
-        # Copy old weights
-        new_classifier.weight.data[:old_weights.size(0)] = old_weights
+        # Copy old weights (old classes should map to same output dimensions)
+        new_classifier.weight.data[:old_weights.size(0), :] = old_weights
         new_classifier.bias.data[:old_bias.size(0)] = old_bias
         
         # Initialize new weights
-        nn.init.kaiming_normal_(new_classifier.weight.data[old_weights.size(0):])
+        nn.init.kaiming_normal_(new_classifier.weight.data[old_weights.size(0):, :])
         nn.init.zeros_(new_classifier.bias.data[old_bias.size(0):])
         
         self.classifier = new_classifier
@@ -97,8 +97,13 @@ class SDCILModel(nn.Module):
             images: Images to store
             labels: Corresponding labels
         """
-        self.memory_images.extend(images.cpu())
-        self.memory_labels.extend(labels.cpu())
+        # Store as tensors for efficient access
+        if len(self.memory_images) == 0:
+            self.memory_images = images.cpu()
+            self.memory_labels = labels.cpu()
+        else:
+            self.memory_images = torch.cat([self.memory_images, images.cpu()], dim=0)
+            self.memory_labels = torch.cat([self.memory_labels, labels.cpu()], dim=0)
         
         # Limit memory size
         if len(self.memory_images) > self.config.MEMORY_SIZE:
@@ -107,7 +112,7 @@ class SDCILModel(nn.Module):
         
         print(f"Memory updated: {len(self.memory_images)} samples stored")
     
-    def get_memory(self) -> Tuple[List, List]:
+    def get_memory(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Get stored memory samples
         
